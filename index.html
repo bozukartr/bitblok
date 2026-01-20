@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bit Stack - iOS Multiplayer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <main id="game-container">
+            <canvas id="game-canvas"></canvas>
+            <div id="drop-preview" class="hidden"></div>
+
+            <!-- HUD (Compact Top Bar) -->
+            <div id="game-hud" class="hidden">
+                <div class="match-score glass-panel">
+                    <span id="score-p1">0</span>
+                    <span class="divider"> - </span>
+                    <span id="score-p2">0</span>
+                </div>
+                <div id="turn-indicator" class="turn-indicator glass-panel">
+                    <span id="turn-text">YÜKLENİYOR...</span>
+                </div>
+                <div class="score-card glass-panel">
+                    <span id="stack-count">0</span><span class="unit">BLOK</span>
+                </div>
+                <!-- Turn Timer Bar -->
+                <div id="turn-timer-container" class="glass-panel hidden">
+                    <div id="turn-timer-fill"></div>
+                </div>
+            </div>
+
+            <!-- Lobby UI (Entry) -->
+            <div id="lobby-ui" class="glass-panel compact-overlay">
+                <div class="lobby-header">
+                    <h1>Bit Stack</h1>
+                    <p>Ultra Multiplayer Stacking</p>
+                </div>
+
+                <div class="lobby-content">
+                    <div class="input-group">
+                        <label>Oyuncu Adı</label>
+                        <input type="text" id="player-name" placeholder="İsminizi yazın..." maxlength="12">
+                    </div>
+
+                    <div class="lobby-actions">
+                        <button id="create-btn" class="ios-btn primary">Oda Kur</button>
+
+                        <div class="divider-text">veya</div>
+
+                        <div class="join-section">
+                            <input type="number" id="room-code-input" placeholder="5 Haneli Kod" pattern="[0-9]*"
+                                inputmode="numeric">
+                            <button id="join-btn" class="ios-btn secondary">Koda Katıl</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waiting Room UI -->
+            <div id="waiting-room" class="glass-panel compact-overlay hidden">
+                <h2>Oda Bekleniyor</h2>
+                <p id="room-id-display">Oda: ...</p>
+
+                <div class="players-list">
+                    <div id="p1-slot" class="player-slot empty">
+                        <div class="avatar"></div>
+                        <span class="name">Bekleniyor...</span>
+                        <span class="status-tag">...</span>
+                    </div>
+                    <div id="p2-slot" class="player-slot empty">
+                        <div class="avatar"></div>
+                        <span class="name">Bekleniyor...</span>
+                        <span class="status-tag">...</span>
+                    </div>
+                </div>
+
+                <div class="waiting-actions">
+                    <button id="ready-btn" class="ios-btn secondary hidden">Hazır</button>
+                    <button id="start-btn" class="ios-btn primary hidden">Oyunu Başlat</button>
+                </div>
+            </div>
+
+            <!-- Countdown Overlay -->
+            <div id="countdown-overlay" class="hidden">
+                <span id="countdown-number">3</span>
+            </div>
+
+            <div id="game-over" class="glass-panel compact-overlay hidden">
+                <h2 id="result-text">OYUN BİTTİ</h2>
+                <p id="reason-text">Bloğu düşürdün!</p>
+                <div class="over-actions">
+                    <button id="restart-btn" class="ios-btn primary">Tekrar Dene</button>
+                    <button id="menu-btn" class="ios-btn secondary">Ana Menü</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
