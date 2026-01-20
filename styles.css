@@ -70,6 +70,7 @@ body {
     height: 100%;
     display: block;
     z-index: 10;
+    touch-action: none;
 }
 
 .compact-overlay {

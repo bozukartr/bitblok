@@ -21,6 +21,9 @@ const auth = firebase.auth();
 const db = firebase.database();
 
 // --- 2. GLOBAL STATE ---
+const V_WIDTH = 400;  // Virtual Width
+const V_HEIGHT = 700; // Virtual Height
+
 let currentUser = null;
 let currentRoomId = null;
 let amIHost = false;
@@ -58,8 +61,8 @@ function initPhysics() {
         canvas: canvas,
         engine: engine,
         options: {
-            width: container.clientWidth,
-            height: container.clientHeight,
+            width: V_WIDTH,
+            height: V_HEIGHT,
             wireframes: false,
             background: 'transparent'
         }
@@ -85,8 +88,8 @@ function initPhysics() {
 
 function setupGround() {
     const ground = Bodies.rectangle(
-        container.clientWidth / 2, container.clientHeight - 100,
-        container.clientWidth * 0.6, 15,
+        V_WIDTH / 2, V_HEIGHT - 100,
+        V_WIDTH * 0.7, 15,
         { isStatic: true, label: 'ground', chamfer: { radius: 8 }, render: { fillStyle: '#1d1d1f' } }
     );
     Composite.add(engine.world, [ground]);
@@ -101,7 +104,7 @@ function setupCollisionHandling() {
     Events.on(engine, 'afterUpdate', () => {
         if (game.status !== 'PLAYING') return;
         game.blocks.forEach(item => {
-            if (item.body.position.y > container.clientHeight + 50) {
+            if (item.body.position.y > V_HEIGHT + 100) {
                 if (item.owner === currentUser.testUid) {
                     triggerGameOver(currentUser.testUid);
                 }
@@ -295,17 +298,26 @@ function startPlayingPhase() {
 
     canvas.onmousemove = (e) => {
         if (game.status !== 'PLAYING') return;
+
+        // Map screen X to Virtual X
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = V_WIDTH / rect.width;
+        const virtualX = (e.clientX - rect.left) * scaleX;
+
         const preview = document.getElementById('drop-preview');
         if (game.turn === currentUser.testUid && game.settled) {
             preview.classList.remove('hidden');
-            preview.style.left = `${e.offsetX}px`;
+            preview.style.left = `${(e.clientX - rect.left)}px`;
         } else {
             preview.classList.add('hidden');
         }
     };
 
     canvas.onclick = (e) => {
-        executeDrop(e.offsetX);
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = V_WIDTH / rect.width;
+        const virtualX = (e.clientX - rect.left) * scaleX;
+        executeDrop(virtualX);
     };
 }
 
@@ -329,7 +341,7 @@ function updateTimerLogic() {
 
     // Auto Drop (only for the active player to avoid double drops)
     if (elapsed >= limit && game.turn === currentUser.testUid && game.settled) {
-        const randomX = 50 + Math.random() * (canvas.width - 100);
+        const randomX = 50 + Math.random() * (V_WIDTH - 100);
         executeDrop(randomX);
     }
 }
@@ -356,29 +368,22 @@ function executeDrop(x) {
 function updateCameraFocus() {
     if (game.blocks.length === 0) return;
 
-    // Find the highest block (lowest Y)
-    let minY = container.clientHeight;
+    // Find the highest block (lowest Y) in virtual space
+    let minY = V_HEIGHT;
     game.blocks.forEach(b => {
         if (b.body.position.y < minY) minY = b.body.position.y;
     });
 
     // If tower is high (less than 40% height remaining at top)
-    const threshold = container.clientHeight * 0.4;
-    const targetY = minY < threshold ? minY - 100 : 0;
+    const threshold = V_HEIGHT * 0.4;
 
-    // Smoothly interpolate camera bounds if needed
-    // For simplicity, we'll use Render.lookAt with a fixed width
-    // or just adjust render.bounds
     if (minY < threshold) {
-        const zoomWidth = container.clientWidth;
-        const zoomHeight = container.clientHeight;
-
-        // Push bounds up
+        // Push bounds up in virtual units
         render.bounds.min.y = minY - 200;
-        render.bounds.max.y = minY - 200 + zoomHeight;
+        render.bounds.max.y = minY - 200 + V_HEIGHT;
     } else {
         render.bounds.min.y = 0;
-        render.bounds.max.y = container.clientHeight;
+        render.bounds.max.y = V_HEIGHT;
     }
 }
 function checkHostSettlement() {
@@ -516,8 +521,15 @@ document.getElementById('menu-btn').onclick = () => {
 };
 
 window.onresize = () => {
-    if (render && render.canvas) {
-        render.canvas.width = container.clientWidth;
-        render.canvas.height = container.clientHeight;
-    }
+    // Canvas dimensions stay V_WIDTH x V_HEIGHT, 
+    // we don't change render.canvas.width because Render.run handles it.
 };
+
+// --- 10. PWA SERVICE WORKER REGISTRATION ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW Registered:', reg.scope))
+            .catch(err => console.log('SW Registration Failed:', err));
+    });
+}
