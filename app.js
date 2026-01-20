@@ -299,15 +299,13 @@ function startPlayingPhase() {
     canvas.onmousemove = (e) => {
         if (game.status !== 'PLAYING') return;
 
-        // Map screen X to Virtual X
         const rect = canvas.getBoundingClientRect();
-        const scaleX = V_WIDTH / rect.width;
-        const virtualX = (e.clientX - rect.left) * scaleX;
-
+        // Since the preview is relative to the canvas's parent (#game-container),
+        // we can position it using the e.clientX relative to the container.
         const preview = document.getElementById('drop-preview');
         if (game.turn === currentUser.testUid && game.settled) {
             preview.classList.remove('hidden');
-            preview.style.left = `${(e.clientX - rect.left)}px`;
+            preview.style.left = `${e.clientX}px`;
         } else {
             preview.classList.add('hidden');
         }
@@ -316,6 +314,7 @@ function startPlayingPhase() {
     canvas.onclick = (e) => {
         const rect = canvas.getBoundingClientRect();
         const scaleX = V_WIDTH / rect.width;
+        // Map clicks to the virtual 400px width
         const virtualX = (e.clientX - rect.left) * scaleX;
         executeDrop(virtualX);
     };
