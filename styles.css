@@ -42,110 +42,23 @@ body {
         radial-gradient(at 0% 100%, rgba(255, 149, 0, 0.08) 0px, transparent 50%);
     background-attachment: fixed;
     position: relative;
-    overflow: hidden;
-}
-
-/* Floating Background Orbs */
-.bg-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    z-index: 0;
-    opacity: 0.4;
-    pointer-events: none;
-    animation: orbFloat 20s infinite alternate ease-in-out;
-}
-
-.orb-1 {
-    width: 400px;
-    height: 400px;
-    background: var(--ios-blue);
-    top: -100px;
-    left: -100px;
-}
-
-.orb-2 {
-    width: 350px;
-    height: 350px;
-    background: var(--ios-green);
-    bottom: -50px;
-    right: -50px;
-    animation-delay: -5s;
-}
-
-.orb-3 {
-    width: 300px;
-    height: 300px;
-    background: var(--ios-red);
-    top: 40%;
-    right: -100px;
-    animation-delay: -10s;
-}
-
-@keyframes orbFloat {
-    from {
-        transform: translate(0, 0) scale(1);
-    }
-
-    to {
-        transform: translate(50px, 100px) scale(1.1);
-    }
 }
 
 .glass-panel {
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.1),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-    border-radius: 28px;
+    background: var(--ios-glass);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--ios-radius);
     padding: 24px;
-    animation: panelFloat 6s infinite ease-in-out;
-    will-change: transform;
-}
-
-@keyframes panelFloat {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
-@keyframes panelFloatCentered {
-
-    0%,
-    100% {
-        transform: translate(-50%, -50%);
-    }
-
-    50% {
-        transform: translate(-50%, calc(-50% - 10px));
-    }
-}
-
-#lobby-ui .glass-panel {
-    border-bottom: 4px solid var(--ios-blue);
-}
-
-#waiting-room .glass-panel {
-    border-bottom: 4px solid var(--ios-green);
-}
-
-#game-over .glass-panel {
-    border-bottom: 4px solid var(--ios-red);
+    box-shadow: var(--ios-shadow);
 }
 
 #game-container {
     flex: 1;
     position: relative;
     width: 100%;
+    /* No more restrictive top padding - HUD will be an overlay */
     padding: 0;
     overflow: hidden;
     display: flex;
@@ -163,12 +76,12 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
+    transform: translate(-50%, -50%);
     width: 90%;
     max-width: 320px;
     z-index: 100;
     text-align: center;
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    animation: panelFloatCentered 6s infinite ease-in-out;
 }
 
 .compact-overlay.hidden {
@@ -364,13 +277,8 @@ body {
 }
 
 .ios-btn:active {
-    transform: scale(0.9) rotate(-1deg);
-    filter: brightness(0.85);
-}
-
-.ios-btn:hover {
-    transform: scale(1.05) translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    transform: scale(0.96);
+    filter: brightness(0.9);
 }
 
 .ios-btn.primary {

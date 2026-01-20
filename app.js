@@ -26,7 +26,6 @@ let currentRoomId = null;
 let amIHost = false;
 let sessionSuffix = Math.random().toString(36).substr(2, 4);
 let haveIUpdatedScore = false;
-let lastLobbySpawn = 0;
 
 // Local Game Object - Mirrors Firebase
 const game = {
@@ -70,19 +69,11 @@ function initPhysics() {
 
     // Deterministic 60FPS Update Loop
     function frame() {
-        if (game.status === 'LOBBY' || game.status === 'PLAYING' || game.status === 'GAMEOVER') {
-            // Adjust Gravity for zero-gravity lobby
-            engine.world.gravity.y = (game.status === 'LOBBY') ? 0 : 1;
-
+        if (game.status === 'PLAYING' || game.status === 'GAMEOVER') {
             Engine.update(engine, 1000 / 60);
-            if (amIHost && game.status === 'PLAYING') checkHostSettlement();
-
-            if (game.status === 'LOBBY') {
-                updateLobbyContinuousPhysics();
-            } else {
-                updateTimerLogic();
-                updateCameraFocus();
-            }
+            if (amIHost) checkHostSettlement();
+            updateTimerLogic();
+            updateCameraFocus();
         }
         requestAnimationFrame(frame);
     }
@@ -131,7 +122,6 @@ auth.signOut().then(() => {
         currentUser = u.user;
         currentUser.testUid = currentUser.uid + "_" + sessionSuffix;
         initPhysics();
-        spawnLobbyDecorations();
 
         // Enable buttons
         createBtn.disabled = false;
@@ -158,7 +148,7 @@ document.getElementById('join-btn').onclick = () => {
         if (s.exists()) joinRoom(code, name, false);
         else alert("Oda bulunamadı.");
     });
-}
+};
 
 // --- 5. ROOM LOGIC & SYNC ---
 function joinRoom(roomId, name, host) {
@@ -247,36 +237,9 @@ function joinRoom(roomId, name, host) {
     });
 }
 
-function leaveRoom() {
-    if (!currentRoomId || !currentUser) return;
-
-    // Stop listeners
-    db.ref(`rooms/${currentRoomId}/players`).off();
-    db.ref(`rooms/${currentRoomId}`).off();
-    db.ref(`rooms/${currentRoomId}/scores`).off();
-    db.ref(`rooms/${currentRoomId}/world`).off();
-    db.ref(`rooms/${currentRoomId}/blocks`).off();
-
-    // Remove self from player list
-    db.ref(`rooms/${currentRoomId}/players/${currentUser.testUid}`).remove();
-
-    // Local reset
-    currentRoomId = null;
-    amIHost = false;
-    game.status = 'LOBBY';
-
-    document.getElementById('waiting-room').classList.add('hidden');
-    document.getElementById('game-hud').classList.add('hidden');
-    document.getElementById('game-over').classList.add('hidden');
-    document.getElementById('lobby-ui').classList.remove('hidden');
-
-    resetToLobby();
-}
-
 // --- 6. PHASE TRANSITION FUNCTIONS ---
 function resetToLobby() {
     clearPhysics();
-    spawnLobbyDecorations();
     haveIUpdatedScore = false;
     document.getElementById('game-over').classList.add('hidden');
     document.getElementById('game-hud').classList.add('hidden');
@@ -547,8 +510,6 @@ document.getElementById('restart-btn').onclick = () => {
     db.ref(`rooms/${currentRoomId}/players/${currentUser.testUid}/rematch`).set(true);
 };
 
-const leaveBtn = document.getElementById('leave-btn');
-if (leaveBtn) leaveBtn.onclick = leaveRoom;
 document.getElementById('menu-btn').onclick = () => {
     document.body.classList.add('fade-out');
     setTimeout(() => location.reload(), 500);
@@ -560,59 +521,3 @@ window.onresize = () => {
         render.canvas.height = container.clientHeight;
     }
 };
-
-function updateLobbyContinuousPhysics() {
-    const now = Date.now();
-    // Spawn floating blocks
-    if (now - lastLobbySpawn > 2500 && Composite.allBodies(engine.world).length < 15) {
-        lastLobbySpawn = now;
-        const type = WIDGET_TYPES[Math.floor(Math.random() * WIDGET_TYPES.length)];
-        const side = Math.random() > 0.5 ? -100 : container.clientWidth + 100;
-        const x = side === -100 ? -100 : container.clientWidth + 100;
-        const y = Math.random() * container.clientHeight;
-
-        const block = Bodies.rectangle(x, y, type.width, 60, {
-            chamfer: { radius: 14 },
-            frictionAir: 0.01,
-            isSensor: true,
-            render: { fillStyle: type.color, opacity: 0.4 }
-        });
-
-        // Give slow floating velocity
-        Body.setVelocity(block, {
-            x: side === -100 ? (0.5 + Math.random()) : -(0.5 + Math.random()),
-            y: (Math.random() - 0.5) * 0.5
-        });
-        Body.setAngularVelocity(block, (Math.random() - 0.5) * 0.01);
-
-        Composite.add(engine.world, [block]);
-    }
-
-    // Recycle
-    const allBodies = Composite.allBodies(engine.world);
-    allBodies.forEach(b => {
-        if (b.label === 'ground') return;
-        if (b.position.y > container.clientHeight + 200 || b.position.y < -200 ||
-            b.position.x < -200 || b.position.x > container.clientWidth + 200) {
-            Composite.remove(engine.world, b);
-        }
-    });
-}
-
-function spawnLobbyDecorations() {
-    if (game.status !== 'LOBBY') return;
-    for (let i = 0; i < 8; i++) {
-        const type = WIDGET_TYPES[Math.floor(Math.random() * WIDGET_TYPES.length)];
-        const x = Math.random() * container.clientWidth;
-        const y = Math.random() * container.clientHeight;
-        const block = Bodies.rectangle(x, y, type.width, 60, {
-            chamfer: { radius: 14 },
-            frictionAir: 0.01,
-            isSensor: true,
-            render: { fillStyle: type.color, opacity: 0.3 }
-        });
-        Body.setVelocity(block, { x: (Math.random() - 0.5) * 1, y: (Math.random() - 0.5) * 1 });
-        Body.setAngularVelocity(block, (Math.random() - 0.5) * 0.01);
-        Composite.add(engine.world, [block]);
-    }
-}
